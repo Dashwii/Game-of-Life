@@ -1,93 +1,135 @@
 import pygame
+import random
 
-WIDTH, HEIGHT = 1000, 1000
-ROWS, COLS, = 40, 40
-FPS = 60
-CELL_FPS = 8
-WINDOW = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Game of Life")
+pygame.init()
 
-WHITE = (255, 255, 255)
-GRAY = (128, 128, 128)
 BLACK = (0, 0, 0)
+WHITE = (250, 250, 250)
+BLUE = (0, 14, 71)
+cell_size = 13
+cell_number = 100
+FPS = 60
+SCREEN = pygame.display.set_mode((cell_size * cell_number, cell_size * cell_number))
+
+# Cell generation speed
+NEXT_GENERATION = pygame.USEREVENT
+pygame.time.set_timer(NEXT_GENERATION, 150)  # 1 second
+
+
+def draw_grid(grid, grid_overlay):
+    SCREEN.fill(WHITE)
+    for y in range(cell_number):
+        for x in range(cell_number):
+            # Flip y and x to give correct filled square
+            rect = pygame.Rect(y * cell_size, x * cell_size, cell_size, cell_size)
+            if grid[x][y] == 1:
+                pygame.draw.rect(SCREEN, BLUE, rect, 0)
+    # Grid
+    if grid_overlay:
+        for y in range(cell_number):
+            for x in range(cell_number):
+                # Flip y and x to give correct filled square
+                rect = pygame.Rect(y * cell_size, x * cell_size, cell_size, cell_size)
+                pygame.draw.rect(SCREEN, BLACK, rect, 1)
+    pygame.display.update()
+
+
+def get_neighbors(curr_cell, grid):
+    row_x, col_y = curr_cell[0], curr_cell[1]
+    neighbor_count = 0
+    neighbors = ((row_x - 1, col_y - 1), (row_x - 1, col_y), (row_x - 1, col_y + 1),
+                 (row_x, col_y - 1),                           (row_x, col_y + 1),
+                 (row_x + 1, col_y - 1), (row_x + 1, col_y), (row_x + 1, col_y + 1))
+    for neighbor in neighbors:
+        if (0 <= neighbor[0] < len(grid)) and (0 <= neighbor[1] < len(grid[0])):  # Check if in bounds
+            if grid[neighbor[0]][neighbor[1]] == 1:
+                neighbor_count += 1
+    return neighbor_count
+
+
+def conway(cell_state, neighbor_count):
+    # Will return 1 or 0 based on conway game of life rules if the cell is alive or dead respectively
+    if cell_state == 1 and neighbor_count in (2, 3):
+        return 1
+    elif cell_state == 0 and neighbor_count == 3:
+        return 1
+    else:
+        return 0
+
+
+def return_new_grid(grid):
+    new_grid = [[0] * len(row) for row in grid]
+    for ix, row in enumerate(grid):
+        for iy, column in enumerate(row):
+            neighbor_count = get_neighbors((ix, iy), grid)
+            alive_or_dead = conway(grid[ix][iy], neighbor_count)
+            new_grid[ix][iy] = alive_or_dead
+    return new_grid
 
 
 def main():
-    matrix = [[0 for col in range(COLS)] for row in range(ROWS)]
     clock = pygame.time.Clock()
-    mouse_down = False
-    cells_moving = False
-
+    grid = [[random.randint(0, 1) for _ in range(cell_number)] for _ in range(cell_number)]
+    draw_mode = False
+    grid_overlay = False
+    left_mb_held = False
+    right_mb_held = False
     while True:
-        if cells_moving:
-            clock.tick(CELL_FPS)
-        else:
-            clock.tick(FPS)
-        mouse_pos = pygame.mouse.get_pos()
-        keys_pressed = pygame.key.get_pressed()
-
+        clock.tick(FPS)
         for event in pygame.event.get():
+            keys = pygame.key.get_pressed()
             if event.type == pygame.QUIT:
-                return
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_down = True
+                pygame.quit()
+
+            if event.type == NEXT_GENERATION and not draw_mode:
+                grid = return_new_grid(grid)
+
+            if event.type == pygame.KEYDOWN:
+                if keys[pygame.K_g]:
+                    if not grid_overlay:
+                        grid_overlay = True
+                        print("Grid overlay on")
+                    else:
+                        grid_overlay = False
+                        print("Grid overlay off")
+
+                if keys[pygame.K_d]:
+                    if not draw_mode:
+                        draw_mode = True
+                        print("Draw mode enabled")
+                    else:
+                        draw_mode = False
+                        print("Draw mode disabled")
+
+                if keys[pygame.K_c] and draw_mode:
+                    grid = [[0 for _ in range(cell_number)] for _ in range(cell_number)]
+                    print("Board cleared")
+
+                if keys[pygame.K_r]:
+                    grid = [[random.randint(0, 1) for _ in range(cell_number)] for _ in range(cell_number)]
+                    print("Randomized")
+
+            if event.type == pygame.MOUSEBUTTONDOWN:  # If the mouse is pressed and continuously held the game will draw until the mouse is released
+                if event.button == 1:
+                    left_mb_held = True
+                elif event.button == 3:
+                    right_mb_held = True
             if event.type == pygame.MOUSEBUTTONUP:
-                mouse_down = False
+                if event.button == 1:
+                    left_mb_held = False
+                elif event.button == 3:
+                    right_mb_held = False
 
-        if mouse_down:
-            square = (mouse_pos[0] // 25, mouse_pos[1] // 25)
-            matrix[square[0]][square[1]] = 1
-        if keys_pressed[pygame.K_SPACE]:
-            print("Cells moving")
-            cells_moving = True
-        if keys_pressed[pygame.K_d]:
-            print("Draw mode")
-            cells_moving = False
-        if keys_pressed[pygame.K_ESCAPE] and not cells_moving:
-            print("Board erased")
-            matrix = [[0 for col in range(COLS)] for row in range(ROWS)]
-        if cells_moving:
-            determine_alive_cell(matrix)
+        if left_mb_held and draw_mode:  # Left click add square
+            mouse = pygame.mouse.get_pos()
+            square = mouse[0] // cell_size, mouse[1] // cell_size
+            grid[square[1]][square[0]] = 1
+        elif right_mb_held and draw_mode:  # Right click remove square
+            mouse = pygame.mouse.get_pos()
+            square = mouse[0] // cell_size, mouse[1] // cell_size
+            grid[square[1]][square[0]] = 0
 
-        draw_board(matrix)
-
-
-def determine_alive_cell(matrix):
-    # Any live cell with two or three live neighbors lives
-    # Any dead cell with three live neighbors becomes a live cell.
-    # All other live cells die on next generation. All other dead cells stay dead.
-
-    for i_row, row in enumerate(matrix):
-        for j_col, column in enumerate(matrix[i_row]):
-            current_cell = matrix[i_row][j_col]
-            surrounding = ((i_row - 1, j_col - 1), (i_row - 1, j_col), (i_row - 1, j_col + 1),
-                           (i_row, j_col - 1),                          (i_row, j_col + 1),
-                           (i_row + 1, j_col - 1), (i_row + 1, j_col), (i_row + 1, j_col + 1))
-            neighbor_count = 0
-            for neighbor in surrounding:
-                if 0 <= neighbor[0] < len(matrix) and 0 <= neighbor[1] < len(matrix[0]):
-                    if matrix[neighbor[0]][neighbor[1]] == 1:
-                        neighbor_count += 1
-
-            if current_cell == 1 and neighbor_count in (2, 3):
-                continue
-            elif current_cell == 0 and neighbor_count == 3:
-                matrix[i_row][j_col] = 1
-            else:
-                matrix[i_row][j_col] = 0
-
-
-def draw_board(matrix):
-    WINDOW.fill(WHITE)
-    for i, column in enumerate(matrix):
-        pygame.draw.line(WINDOW, GRAY, ((i + 1) * 25, 0), ((i + 1) * 25, HEIGHT), width=1)
-        for j, row in enumerate(column):
-            pygame.draw.line(WINDOW, GRAY, (0, (j + 1) * 25), (WIDTH, (j + 1) * 25), width=1)
-            # Draw alive cells
-            if matrix[i][j] == 1:
-                pygame.draw.rect(WINDOW, BLACK, (i * 25, j * 25, 25, 25))
-
-    pygame.display.update()
+        draw_grid(grid, grid_overlay)
 
 
 main()
