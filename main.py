@@ -35,13 +35,20 @@ def draw_grid(grid, grid_overlay):
 def get_neighbors(curr_cell, grid):
     row_x, col_y = curr_cell[0], curr_cell[1]
     neighbor_count = 0
-    neighbors = ((row_x - 1, col_y - 1), (row_x - 1, col_y), (row_x - 1, col_y + 1),
-                 (row_x, col_y - 1),                           (row_x, col_y + 1),
-                 (row_x + 1, col_y - 1), (row_x + 1, col_y), (row_x + 1, col_y + 1))
+    neighbors = ([row_x - 1, col_y - 1], [row_x - 1, col_y], [row_x - 1, col_y + 1],
+                 [row_x, col_y - 1],                           [row_x, col_y + 1],
+                 [row_x + 1, col_y - 1], [row_x + 1, col_y], [row_x + 1, col_y + 1])
     for neighbor in neighbors:
-        if (0 <= neighbor[0] < len(grid)) and (0 <= neighbor[1] < len(grid[0])):  # Check if in bounds
-            if grid[neighbor[0]][neighbor[1]] == 1:
-                neighbor_count += 1
+        if neighbor[0] < 0:
+            neighbor[0] = len(grid) - 1
+        elif neighbor[0] >= len(grid):
+            neighbor[0] = 0
+        if neighbor[1] < 0:
+            neighbor[1] = len(grid) - 1
+        elif neighbor[1] >= len(grid):
+            neighbor[1] = 0
+        if grid[neighbor[0]][neighbor[1]] == 1:
+            neighbor_count += 1
     return neighbor_count
 
 
