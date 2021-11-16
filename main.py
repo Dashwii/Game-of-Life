@@ -7,9 +7,10 @@ BLACK = (0, 0, 0)
 WHITE = (250, 250, 250)
 BLUE = (0, 14, 71)
 cell_size = 13
-cell_number = 100
+cell_number = 90
 FPS = 60
 SCREEN = pygame.display.set_mode((cell_size * cell_number, cell_size * cell_number))
+pygame.display.set_caption("Conway's Game of Life")
 
 
 
