@@ -11,9 +11,7 @@ cell_number = 100
 FPS = 60
 SCREEN = pygame.display.set_mode((cell_size * cell_number, cell_size * cell_number))
 
-# Cell generation speed
-NEXT_GENERATION = pygame.USEREVENT
-pygame.time.set_timer(NEXT_GENERATION, 150)  # 1 second
+
 
 
 def draw_grid(grid, grid_overlay):
@@ -68,6 +66,10 @@ def return_new_grid(grid):
 
 
 def main():
+    generation_speed = 150
+    NEXT_GENERATION = pygame.USEREVENT
+    pygame.time.set_timer(NEXT_GENERATION, generation_speed)
+
     clock = pygame.time.Clock()
     grid = [[random.randint(0, 1) for _ in range(cell_number)] for _ in range(cell_number)]
     draw_mode = False
@@ -108,6 +110,17 @@ def main():
                 if keys[pygame.K_r]:
                     grid = [[random.randint(0, 1) for _ in range(cell_number)] for _ in range(cell_number)]
                     print("Randomized")
+
+                if keys[pygame.K_LEFT]:
+                    if generation_speed - 50 != 0:
+                        generation_speed -= 50
+                        pygame.time.set_timer(NEXT_GENERATION, generation_speed)
+                        print(f"Speed: New gen every {generation_speed}ms")
+
+                if keys[pygame.K_RIGHT]:
+                    generation_speed += 50
+                    pygame.time.set_timer(NEXT_GENERATION, generation_speed)
+                    print(f"Speed: New gen every {generation_speed}ms")
 
             if event.type == pygame.MOUSEBUTTONDOWN:  # If the mouse is pressed and continuously held the game will draw until the mouse is released
                 if event.button == 1:
