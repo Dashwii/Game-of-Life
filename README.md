@@ -7,4 +7,4 @@ Python implementation of Conway's Game of Life using pygame.
 - Press "g" to activate grid layer
 - Press "r" to randomize the board
 
-[![Desktop-2021.11.16---05.30.12.71-1.gif](https://s1.gifyu.com/images/Desktop-2021.11.16---05.30.12.71-1.gif)](https://gifyu.com/image/S2x0x)
+<iframe src="https://giphy.com/embed/jVEp3EJTqCysrsuJWB" width="468" height="480" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/jVEp3EJTqCysrsuJWB">via GIPHY</a></p>
