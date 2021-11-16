@@ -4,8 +4,10 @@ import random
 pygame.init()
 
 BLACK = (0, 0, 0)
+LIGHTER_BLACK = (40, 40, 40)
 WHITE = (250, 250, 250)
 BLUE = (0, 14, 71)
+RED = (255, 0, 0)
 cell_size = 13
 cell_number = 90
 FPS = 60
@@ -15,21 +17,30 @@ pygame.display.set_caption("Conway's Game of Life")
 
 
 
-def draw_grid(grid, grid_overlay):
-    SCREEN.fill(WHITE)
+def draw_grid(grid, grid_overlay, black_background):
+    if black_background:
+        SCREEN.fill(BLACK)
+    else:
+        SCREEN.fill(WHITE)
     for y in range(cell_number):
         for x in range(cell_number):
             # Flip y and x to give correct filled square
             rect = pygame.Rect(y * cell_size, x * cell_size, cell_size, cell_size)
             if grid[x][y] == 1:
-                pygame.draw.rect(SCREEN, BLUE, rect, 0)
+                if black_background:
+                    pygame.draw.rect(SCREEN, RED, rect, 0)
+                else:
+                    pygame.draw.rect(SCREEN, BLUE, rect, 0)
     # Grid
     if grid_overlay:
         for y in range(cell_number):
             for x in range(cell_number):
                 # Flip y and x to give correct filled square
                 rect = pygame.Rect(y * cell_size, x * cell_size, cell_size, cell_size)
-                pygame.draw.rect(SCREEN, BLACK, rect, 1)
+                if black_background:
+                    pygame.draw.rect(SCREEN, LIGHTER_BLACK, rect, 1)
+                else:
+                    pygame.draw.rect(SCREEN, BLACK, rect, 1)
     pygame.display.update()
 
 
@@ -84,6 +95,7 @@ def main():
     grid_overlay = False
     left_mb_held = False
     right_mb_held = False
+    black_background = False
     while True:
         clock.tick(FPS)
         for event in pygame.event.get():
@@ -130,6 +142,14 @@ def main():
                     pygame.time.set_timer(NEXT_GENERATION, generation_speed)
                     print(f"Speed: New gen every {generation_speed}ms")
 
+                if keys[pygame.K_b]:
+                    if not black_background:
+                        black_background = True
+                        print("Black background on")
+                    else:
+                        black_background = False
+                        print("Black background off")
+
             if event.type == pygame.MOUSEBUTTONDOWN:  # If the mouse is pressed and continuously held the game will draw until the mouse is released
                 if event.button == 1:
                     left_mb_held = True
@@ -150,7 +170,7 @@ def main():
             square = mouse[0] // cell_size, mouse[1] // cell_size
             grid[square[1]][square[0]] = 0
 
-        draw_grid(grid, grid_overlay)
+        draw_grid(grid, grid_overlay, black_background)
 
 
 main()
